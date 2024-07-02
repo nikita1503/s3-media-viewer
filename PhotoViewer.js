@@ -10,7 +10,7 @@ var albumBucketName = "devday-30-jun-photos";
 // Initialize the Amazon Cognito credentials provider
 AWS.config.region = "ap-south-1"; // Region
 AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-  IdentityPoolId: "ap-south-1:942da8e0-5eea-4e64-beb7-7d660697d3fb",
+  IdentityPoolId: process.env.IDENTITY_POOL_ID, // Get IdentityPoolId from environment variable
 });
 var s3 = new AWS.S3({
     apiVersion: "2006-03-01",
