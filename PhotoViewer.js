@@ -88,58 +88,100 @@ function listAlbums() {
 
 // Show the photos that exist in an album.
 function viewAlbum(albumName) {
-    var albumPhotosKey = encodeURIComponent(albumName) + "/";
-    s3.listObjects({ Prefix: albumPhotosKey }, function (err, data) {
-      if (err) {
-        return alert("There was an error viewing your album: " + err.message);
-      }
-      // 'this' references the AWS.Request instance that represents the response
-      var href = this.request.httpRequest.endpoint.href;
-      var bucketUrl = href + albumBucketName + "/";
+  var albumPhotosKey = encodeURIComponent(albumName) + "/";
+  s3.listObjects({ Prefix: albumPhotosKey }, function (err, data) {
+    if (err) {
+      return alert("There was an error viewing your album: " + err.message);
+    }
+    // 'this' references the AWS.Request instance that represents the response
+    var href = this.request.httpRequest.endpoint.href;
+    var bucketUrl = href + albumBucketName + "/";
 
-      var photos = data.Contents.map(function (photo) {
-        var photoKey = photo.Key;
-        var photoUrl = bucketUrl + encodeURIComponent(photoKey);
-        var isVideo = photoKey.toLowerCase().endsWith(".mp4");
-        return getHtml([
-          "<div style='display:inline-block; margin:10px;'>",
-          isVideo
-            ? '<video width="256" height="256" controls><source src="' + photoUrl + '" type="video/mp4">Your browser does not support the video tag.</video>'
-            : '<img style="width:256px;height:256px;" src="' + photoUrl + '"/>',
-          "<div>",
-          '<button style="margin:5px;" onclick="copyToClipboard(\'' + photoUrl + '\')">',
-          "Copy " + (isVideo ? "Video" : "Photo") + " URL",
-          "</button>",
-          "</div>",
-          "</div>",
-        ]);
-      });
-      var message = photos.length
-        ? "<p>The following photos and videos are present.</p>"
-        : "<p>There are no photos or videos in this album.</p>";
-      var htmlTemplate = [
+    var validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv'];
+
+    var photos = data.Contents.filter(function (photo) {
+      var extension = photo.Key.substring(photo.Key.lastIndexOf('.')).toLowerCase();
+      return validExtensions.includes(extension);
+    }).map(function (photo) {
+      var photoKey = photo.Key;
+      var photoUrl = bucketUrl + encodeURIComponent(photoKey);
+      var isVideo = photoKey.toLowerCase().endsWith(".mp4");
+      return getHtml([
+        "<div style='display:inline-block; margin:10px;'>",
+        isVideo
+          ? '<button style="margin:5px;" onclick="loadVideo(\'' + photoUrl + '\', this)">Load Video</button>'
+          : '<img class="lazy" data-src="' + photoUrl + '" style="width:256px;height:256px;" />',
         "<div>",
-        '<button onclick="listAlbums()">',
-        "Back To Albums",
+        '<button style="margin:5px;" onclick="copyToClipboard(\'' + photoUrl + '\')">',
+        "Copy " + (isVideo ? "Video" : "Photo") + " URL",
         "</button>",
         "</div>",
-        "<h2>",
-        "Album: " + albumName,
-        "</h2>",
-        message,
-        "<div>",
-        getHtml(photos),
         "</div>",
-        "<h2>",
-        "End of Album: " + albumName,
-        "</h2>",
-        "<div>",
-        '<button onclick="listAlbums()">',
-        "Back To Albums",
-        "</button>",
-        "</div>",
-      ];
-      document.getElementById("viewer").innerHTML = getHtml(htmlTemplate);
+      ]);
     });
-  }
-  
+
+    var message = photos.length
+      ? "<p>The following photos and videos are present.</p>"
+      : "<p>There are no photos or videos in this album.</p>";
+    var htmlTemplate = [
+      "<div>",
+      '<button onclick="listAlbums()">',
+      "Back To Albums",
+      "</button>",
+      "</div>",
+      "<h2>",
+      "Album: " + albumName,
+      "</h2>",
+      message,
+      "<div>",
+      getHtml(photos),
+      "</div>",
+      "<h2>",
+      "End of Album: " + albumName,
+      "</h2>",
+      "<div>",
+      '<button onclick="listAlbums()">',
+      "Back To Albums",
+      "</button>",
+      "</div>",
+    ];
+    document.getElementById("viewer").innerHTML = getHtml(htmlTemplate);
+
+    // Initialize lazy loading
+    lazyLoadImages();
+  });
+}
+
+// Function to load video when the button is clicked
+function loadVideo(videoUrl, buttonElement) {
+  var videoElement = document.createElement('video');
+  videoElement.width = 256;
+  videoElement.height = 256;
+  videoElement.controls = true;
+  var sourceElement = document.createElement('source');
+  sourceElement.src = videoUrl;
+  sourceElement.type = 'video/mp4';
+  videoElement.appendChild(sourceElement);
+
+  // Replace the button with the video element
+  buttonElement.parentNode.replaceChild(videoElement, buttonElement);
+}
+
+// Function to lazy load images
+function lazyLoadImages() {
+  var lazyImages = document.querySelectorAll('img.lazy');
+  var observer = new IntersectionObserver(function(entries, observer) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var img = entry.target;
+        img.src = img.getAttribute('data-src');
+        img.classList.remove('lazy');
+        observer.unobserve(img);
+      }
+    });
+  });
+
+  lazyImages.forEach(function(img) {
+    observer.observe(img);
+  });
+}
