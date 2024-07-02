@@ -12,12 +12,30 @@ AWS.config.region = "ap-south-1"; // Region
 AWS.config.credentials = new AWS.CognitoIdentityCredentials({
   IdentityPoolId: "ap-south-1:942da8e0-5eea-4e64-beb7-7d660697d3fb",
 });
-
-// Create a new service object
 var s3 = new AWS.S3({
-  apiVersion: "2006-03-01",
-  params: { Bucket: albumBucketName },
-});
+    apiVersion: "2006-03-01",
+    params: { Bucket: albumBucketName },
+  });
+// Create a new service object
+
+function setAlbumBucketName() {
+    var userBucketName = document.getElementById("bucketNameInput").value;
+    if (userBucketName) {
+      albumBucketName = userBucketName;
+      alert("Bucket name set to: " + albumBucketName);
+      
+      // Update the s3 object with the new bucket name
+      s3 = new AWS.S3({
+        apiVersion: "2006-03-01",
+        params: { Bucket: albumBucketName },
+      });
+  
+      listAlbums(); // Call listAlbums after setting the bucket name
+    } else {
+      alert("Please enter a valid bucket name.");
+    }
+  }
+
 
 // A utility function to create HTML.
 function getHtml(template) {
@@ -34,6 +52,7 @@ function copyToClipboard(text) {
 
 // List the photo albums that exist in the bucket.
 function listAlbums() {
+    
     s3.listObjects({ Delimiter: "/" }, function (err, data) {
       if (err) {
         return alert("There was an error listing your albums: " + err.message);
@@ -56,6 +75,7 @@ function listAlbums() {
           : "<p>You do not have any albums. Please Create album.";
         var htmlTemplate = [
           "<h2>Albums</h2>",
+          "<h3>Bucket : "+albumBucketName+"</h3>",
           message,
           "<ul>",
           getHtml(albums),
@@ -76,24 +96,27 @@ function viewAlbum(albumName) {
       // 'this' references the AWS.Request instance that represents the response
       var href = this.request.httpRequest.endpoint.href;
       var bucketUrl = href + albumBucketName + "/";
-  
+
       var photos = data.Contents.map(function (photo) {
         var photoKey = photo.Key;
         var photoUrl = bucketUrl + encodeURIComponent(photoKey);
+        var isVideo = photoKey.toLowerCase().endsWith(".mp4");
         return getHtml([
           "<div style='display:inline-block; margin:10px;'>",
-          '<img style="width:256px;height:256px;" src="' + photoUrl + '"/>',
+          isVideo
+            ? '<video width="256" height="256" controls><source src="' + photoUrl + '" type="video/mp4">Your browser does not support the video tag.</video>'
+            : '<img style="width:256px;height:256px;" src="' + photoUrl + '"/>',
           "<div>",
           '<button style="margin:5px;" onclick="copyToClipboard(\'' + photoUrl + '\')">',
-          "Copy Photo URL",
+          "Copy " + (isVideo ? "Video" : "Photo") + " URL",
           "</button>",
           "</div>",
           "</div>",
         ]);
       });
       var message = photos.length
-        ? "<p>The following photos are present.</p>"
-        : "<p>There are no photos in this album.</p>";
+        ? "<p>The following photos and videos are present.</p>"
+        : "<p>There are no photos or videos in this album.</p>";
       var htmlTemplate = [
         "<div>",
         '<button onclick="listAlbums()">',
@@ -117,9 +140,6 @@ function viewAlbum(albumName) {
         "</div>",
       ];
       document.getElementById("viewer").innerHTML = getHtml(htmlTemplate);
-      document
-        .getElementsByTagName("img")[0]
-        .setAttribute("style", "display:none;");
     });
   }
   

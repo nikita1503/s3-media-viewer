@@ -9,6 +9,12 @@
   </head>
   <body>
     <h1>Photo Album Viewer</h1>
+    <div>
+        <label for="bucketNameInput">Enter Album Bucket Name:</label>
+        <input type="text" id="bucketNameInput" placeholder="Enter bucket name">
+        <button onclick="setAlbumBucketName()">Set Bucket Name</button>
+    <p>Please ensure that your bucket is publicly accessible by following these steps in the <a href="https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-example-photos-view.html">tutorial</a> tutorial - "Create the Bucket", "Configure Role Permissions", "Configure CORS".</p>
+    </div>
     <div id="viewer" />
   </body>
 </html>
