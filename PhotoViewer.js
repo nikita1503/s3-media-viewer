@@ -1,22 +1,33 @@
 // **DO THIS**:
 //   Replace BUCKET_NAME with the bucket name.
 //
-var albumBucketName = "devday-30-jun-photos";
+var albumBucketName = "";
 
 // **DO THIS**:
 //   Replace this block of code with the sample code located at:
 //   Cognito -- Manage Identity Pools -- [identity_pool_name] -- Sample Code -- JavaScript
 //
 // Initialize the Amazon Cognito credentials provider
+// Create a new service object
+
+function setIdentityPoolId() {
+  var identityPoolId = document.getElementById("identityPoolIdInput").value;
+  if (identityPoolId) {
+    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+      IdentityPoolId: identityPoolId,
+    });
+  } else {
+    alert("Please enter a valid Identity Pool ID.");
+  }
+}
+
+// Initialize the Amazon Cognito credentials provider
 AWS.config.region = "ap-south-1"; // Region
-AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-  IdentityPoolId: process.env.IDENTITY_POOL_ID, // Get IdentityPoolId from environment variable
-});
 var s3 = new AWS.S3({
     apiVersion: "2006-03-01",
     params: { Bucket: albumBucketName },
   });
-// Create a new service object
+
 
 function setAlbumBucketName() {
     var userBucketName = document.getElementById("bucketNameInput").value;
@@ -52,7 +63,7 @@ function copyToClipboard(text) {
 
 // List the photo albums that exist in the bucket.
 function listAlbums() {
-    
+
     s3.listObjects({ Delimiter: "/" }, function (err, data) {
       if (err) {
         return alert("There was an error listing your albums: " + err.message);
@@ -84,7 +95,8 @@ function listAlbums() {
         document.getElementById("viewer").innerHTML = getHtml(htmlTemplate);
       }
     });
-  }
+  
+}
 
   var photoVideoTabs = `
   <div style="margin-bottom: 50px;">

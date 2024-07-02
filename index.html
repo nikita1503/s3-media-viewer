@@ -5,16 +5,27 @@
     <!--   Replace SDK_VERSION_NUMBER with the current SDK version number -->
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1652.0.min.js"></script>
     <script src="./PhotoViewer.js"></script>
-    <script>listAlbums();</script>
   </head>
   <body>
     <h1>Photo Album Viewer</h1>
-    <div>
-        <label for="bucketNameInput">Enter Album Bucket Name:</label>
-        <input type="text" id="bucketNameInput" placeholder="Enter bucket name">
-        <button onclick="setAlbumBucketName()">Set Bucket Name</button>
-    <p>Please ensure that your bucket is publicly accessible by following these steps in the <a href="https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-example-photos-view.html">tutorial</a> tutorial - "Create the Bucket", "Configure Role Permissions", "Configure CORS".</p>
-    </div>
+    <ol>
+      <li>
+        <div>
+          <label for="identityPoolIdInput">Enter Identity Pool ID:</label>
+          <input type="text" id="identityPoolIdInput" placeholder="Identity Pool ID">
+          <button onclick="setIdentityPoolId()">Set Identity Pool ID</button>
+          <p>Get the Identity Pool Id from <a href="https://ap-south-1.console.aws.amazon.com/cognito/v2/identity/identity-pools/ap-south-1:942da8e0-5eea-4e64-beb7-7d660697d3fb/user-statistics?region=ap-south-1">here</a>.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <label for="bucketNameInput">Enter Album Bucket Name:</label>
+          <input type="text" id="bucketNameInput" placeholder="Enter bucket name">
+          <button onclick="setAlbumBucketName()">Set Bucket Name</button>
+          <p>Please ensure that your bucket is publicly accessible by following these steps in the <a href="https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-example-photos-view.html">tutorial</a> tutorial - "Create the Bucket", "Configure Role Permissions", "Configure CORS".</p>
+        </div>
+      </li>
+    </ol>
     <!-- Add this HTML where appropriate in your document -->
     <hr style="margin: 50px 0;">
     <div id="viewer" />
