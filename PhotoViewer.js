@@ -86,6 +86,14 @@ function listAlbums() {
     });
   }
 
+  var photoVideoTabs = `
+  <div style="margin-bottom: 50px;">
+    <button onclick="showTab('photos')">Show Photos</button>
+    <button onclick="showTab('videos')">Show Videos</button>
+  </div>
+  <div id="photosTab" class="tabContent"></div>
+  <div id="videosTab" class="tabContent" style="display:none;"></div>`
+
 // Show the photos that exist in an album.
 function viewAlbum(albumName) {
   var albumPhotosKey = encodeURIComponent(albumName) + "/";
@@ -99,14 +107,18 @@ function viewAlbum(albumName) {
 
     var validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv'];
 
-    var photos = data.Contents.filter(function (photo) {
+    var photos = [];
+    var videos = [];
+
+    data.Contents.forEach(function (photo) {
       var extension = photo.Key.substring(photo.Key.lastIndexOf('.')).toLowerCase();
-      return validExtensions.includes(extension);
-    }).map(function (photo) {
+      if (!validExtensions.includes(extension)) return;
+
       var photoKey = photo.Key;
       var photoUrl = bucketUrl + encodeURIComponent(photoKey);
       var isVideo = photoKey.toLowerCase().endsWith(".mp4");
-      return getHtml([
+
+      var htmlContent = getHtml([
         "<div style='display:inline-block; margin:10px;'>",
         isVideo
           ? '<button style="margin:5px;" onclick="loadVideo(\'' + photoUrl + '\', this)">Load Video</button>'
@@ -118,21 +130,28 @@ function viewAlbum(albumName) {
         "</div>",
         "</div>",
       ]);
+
+      if (isVideo) {
+        videos.push(htmlContent);
+      } else {
+        photos.push(htmlContent);
+      }
     });
 
-    var message = photos.length
-      ? "<p>The following photos and videos are present.</p>"
-      : "<p>There are no photos or videos in this album.</p>";
-    var htmlTemplate = [
+    var photosMessage = photos.length
+      ? "<p>The following photos are present.</p>"
+      : "<p>There are no photos in this album.</p>";
+    var videosMessage = videos.length
+      ? "<p>The following videos are present.</p>"
+      : "<p>There are no videos in this album.</p>";
+
+    var photosHtmlTemplate = [
       "<div>",
-      '<button onclick="listAlbums()">',
-      "Back To Albums",
-      "</button>",
       "</div>",
       "<h2>",
       "Album: " + albumName,
       "</h2>",
-      message,
+      photosMessage,
       "<div>",
       getHtml(photos),
       "</div>",
@@ -140,12 +159,28 @@ function viewAlbum(albumName) {
       "End of Album: " + albumName,
       "</h2>",
       "<div>",
-      '<button onclick="listAlbums()">',
-      "Back To Albums",
-      "</button>",
       "</div>",
     ];
-    document.getElementById("viewer").innerHTML = getHtml(htmlTemplate);
+
+    var videosHtmlTemplate = [
+      "<div>",
+      "</div>",
+      "<h2>",
+      "Album: " + albumName,
+      "</h2>",
+      videosMessage,
+      "<div>",
+      getHtml(videos),
+      "</div>",
+      "<h2>",
+      "End of Album: " + albumName,
+      "</h2>",
+      "<div>",
+      "</div>",
+    ];
+    document.getElementById("viewer").innerHTML = photoVideoTabs;
+    document.getElementById("photosTab").innerHTML = getHtml(photosHtmlTemplate);
+    document.getElementById("videosTab").innerHTML = getHtml(videosHtmlTemplate);
 
     // Initialize lazy loading
     lazyLoadImages();
@@ -184,4 +219,18 @@ function lazyLoadImages() {
   lazyImages.forEach(function(img) {
     observer.observe(img);
   });
+}
+
+// Function to show the selected tab
+function showTab(tabName) {
+  var photosTab = document.getElementById("photosTab");
+  var videosTab = document.getElementById("videosTab");
+
+  if (tabName === "photos") {
+    photosTab.style.display = "block";
+    videosTab.style.display = "none";
+  } else if (tabName === "videos") {
+    photosTab.style.display = "none";
+    videosTab.style.display = "block";
+  }
 }
