@@ -24,6 +24,13 @@ function getHtml(template) {
   return template.join("\n");
 }
 
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+      alert('Copied to clipboard!');
+    }, function(err) {
+      alert('Failed to copy text: ' + err);
+    });
+  }
 
 // List the photo albums that exist in the bucket.
 function listAlbums() {
@@ -74,17 +81,14 @@ function viewAlbum(albumName) {
         var photoKey = photo.Key;
         var photoUrl = bucketUrl + encodeURIComponent(photoKey);
         return getHtml([
-          "<span>",
+          "<div style='display:inline-block; margin:10px;'>",
+          '<img style="width:256px;height:256px;" src="' + photoUrl + '"/>',
           "<div>",
-          "<br/>",
-          '<img style="width:128px;height:128px;" src="' + photoUrl + '"/>',
+          '<button style="margin:5px;" onclick="copyToClipboard(\'' + photoUrl + '\')">',
+          "Copy Photo URL",
+          "</button>",
           "</div>",
-          "<div>",
-          "<span>",
-          photoKey.replace(albumPhotosKey, ""),
-          "</span>",
           "</div>",
-          "</span>",
         ]);
       });
       var message = photos.length
